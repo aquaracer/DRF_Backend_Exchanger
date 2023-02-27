@@ -35,7 +35,7 @@ services:
 
   celery:
     build: .
-    command: celery -A finance worker -l info -Q send_notification, update_exchange_rates
+    command: celery -A finance worker -l info -Q send_notification,update_exchange_rates
     volumes:
       - .:/api
     env_file:

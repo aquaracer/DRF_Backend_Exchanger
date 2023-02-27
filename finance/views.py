@@ -19,7 +19,7 @@ from .services import send_funds, TranscationPagination
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['worker'], operation_description='Получение списка счетов пользователя' ** TOKENS_PARAMETER))
+    tags=['worker'], operation_description='Получение списка счетов пользователя', ** TOKENS_PARAMETER))
 class UserAccountListViewSet(GenericViewSet, ListModelMixin):
     """Получения списка счетов пользователя"""
 
