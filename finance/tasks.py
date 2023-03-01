@@ -6,8 +6,12 @@ from .celery import app
 from users.models import User
 
 
-@app.task(bind=True, soft_time_limit=os.getenv('CELERY_TASK_TIMEOUT', 300),
-          default_retry_delay=os.getenv('CELERY_TASK_RETRY_TIME', 30), queue='send_notification')
+@app.task(
+    bind=True,
+    soft_time_limit=os.getenv('CELERY_TASK_TIMEOUT', 300),
+    default_retry_delay=os.getenv('CELERY_TASK_RETRY_TIME', 30),
+    queue='send_notification'
+)
 def send_notification(senders_account, receivers_account, amount_to_receive, currency_to_receive):
     """Отправка пользователю смс уведомления о входящем платеже"""
 

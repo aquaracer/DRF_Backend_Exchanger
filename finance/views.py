@@ -15,7 +15,8 @@ from .serializers import AccountSerializer, TransactionSerializer, YourselfTrans
     UpdateBalanceSerializer
 from .models import Account, Transaction
 from .filters import TranscationFilter, AccountFilter
-from .services import send_funds, TranscationPagination
+from .services import send_funds
+from .pagination import TranscationPagination, AccountPagination
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -127,7 +128,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
     filter_backends = (OrderingFilter, DjangoFilterBackend)
     ordering_fields = ['created', 'balance']
     filterset_class = AccountFilter
-    pagination = TranscationPagination
+    pagination = AccountPagination
 
     def get_queryset(self):
         return Account.objects.all()
