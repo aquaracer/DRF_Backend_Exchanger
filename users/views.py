@@ -52,16 +52,3 @@ class UserAreaViewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response()
-
-
-
-from rest_framework.decorators import action, api_view, permission_classes
-@swagger_auto_schema(method='GET', tags=['api'])
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def connect_receipt_suborder(request):
-
-    a = 1/0
-
-
-    return Response()
