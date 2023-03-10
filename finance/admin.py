@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Account, Currency, Transaction
+from .models import Account, Currency, Transaction, Application
 
 
 @admin.register(Account)
@@ -16,3 +16,10 @@ class CurrencyAdmin(admin.ModelAdmin):
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(Application)
+class ApplicationAdmin(admin.ModelAdmin):
+    list_display = ('account',  'currency', 'payment_id', 'amount', 'type', 'status' , 'error' )
+    readonly_fields = ('payment_id',)
+
+

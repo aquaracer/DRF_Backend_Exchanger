@@ -40,4 +40,5 @@ social-auth-core==3.3.3
 sqlparse==0.4.1
 uritemplate==3.0.1
 urllib3==1.26.2
+yookassa==2.3.5
 zipp==3.4.0

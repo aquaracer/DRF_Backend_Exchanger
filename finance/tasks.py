@@ -1,9 +1,12 @@
-import os, requests, redis, json
+import os, requests, redis, json, logging
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 
 from .celery import app
 from users.models import User
+from users.services import advanced_get_request
+
+logger = logging.getLogger('__name__')
 
 
 @app.task(
@@ -23,17 +26,9 @@ def send_notification(senders_account, receivers_account, amount_to_receive, cur
             raise ObjectDoesNotExist
         message = f"Зачислен перевод на сумму {amount_to_receive}{currency_to_receive} от {sender.first_name}{sender.last_name}"
         url = f"{os.environ.get('SMS_PROVIDER')}&phones={receiver.phone}&mes={message}"
-        try:
-            response = requests.get(url, timeout=3)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            print("Another Error: Something Else", err)
-        except requests.exceptions.HTTPError as errh:
-            print("Http Error:", errh)
-        except requests.exceptions.ConnectionError as errc:
-            print("Error Connecting:", errc)
-        except requests.exceptions.Timeout as errt:
-            print("Timeout Error:", errt)
+        response = advanced_get_request(url, 3)
+        if response['error']:
+            return response
 
 
 @app.task(bind=True, soft_time_limit=os.getenv('CELERY_TASK_TIMEOUT', 300),
@@ -41,20 +36,13 @@ def send_notification(senders_account, receivers_account, amount_to_receive, cur
 def update_exchange_rates():
     """Обновление курсов валют"""
 
-    try:  # получаем актуальные курсы валют
-        response = requests.get(os.environ.get('CURRENCY_COURSES_URL'), timeout=3)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as err:
-        print("Another Error: Something Else", err)
-    except requests.exceptions.HTTPError as errh:
-        print("Http Error:", errh)
-    except requests.exceptions.ConnectionError as errc:
-        print("Error Connecting:", errc)
-    except requests.exceptions.Timeout as errt:
-        print("Timeout Error:", errt)
+    response = advanced_get_request(os.environ.get('CURRENCY_COURSES_URL'), 3)
+
+    if response['error']:
+        return response
 
     redis_instance = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=os.environ.get('REDIS_PORT'), db=0)
-    rates = json.loads(response.text)
+    rates = json.loads(response['response'].text)
 
-    for currency in ['USD', 'EUR', 'CNY']:  # записываем обновленные курсы в redis
+    for currency in ['USD', 'EUR', 'CNY']:
         redis_instance.set(currency, round(rates['Valute'][currency]['Value'], 2))

@@ -68,5 +68,50 @@ class Transaction(AbstarctBaseModel):
         verbose_name_plural = 'Транзакции'
 
     def __str__(self):
-        return f'{self.id} | {self.created} | {self.amount} | {self.currency.symbol} | {self.transaction_type} | ' \
-               f'отправитель {self.sender_account.number} | получатель {self.reciever_account.number}'
+        return f'{self.id}'
+
+
+class Application(AbstarctBaseModel):
+    """Заявка на ввод/вывод средств"""
+
+    REFILL = 'refill'
+    WITHDRAWAL = 'withdrawal'
+
+    TYPE = (
+        (REFILL, 'Ввод'),
+        (WITHDRAWAL, 'Вывод'),
+    )
+
+    PENDING = 'pending'
+    WAITING_FOR_CAPTURE = 'waiting_for_capture'
+    CANCELLED = 'cancelled'
+    COMPLETED = 'completed'
+    ERROR = 'error'
+
+    STATUS = (
+        (PENDING, 'В обработке'),
+        (WAITING_FOR_CAPTURE, 'К зачислению'),
+        (CANCELLED, 'Отменено'),
+        (COMPLETED, 'Выполнено'),
+        (ERROR, 'Ошибка'),
+    )
+
+    account = models.ForeignKey(Account, verbose_name='Счет', on_delete=models.SET_NULL, null=True)
+    currency = models.ForeignKey(Currency, verbose_name='Валюта', on_delete=models.SET_NULL, null=True)
+
+    payment_id = models.UUIDField(verbose_name="Id платежа", unique=True, editable=False, blank=True, null=True)
+    amount = models.DecimalField(
+        verbose_name='Сумма', max_digits=11, decimal_places=2, default=0, validators=[MinValueValidator(0)]
+    )
+    type = models.CharField(verbose_name='Тип платежа', choices=TYPE, max_length=20)
+    status = models.CharField(verbose_name='Статус', choices=STATUS, max_length=20)
+    error = models.CharField(verbose_name='Ошибка',  max_length=3000, blank=True, null=True)
+
+
+class ApplicationLog(AbstarctBaseModel):
+    """История изменений заявки"""
+
+    application = models.ForeignKey(Application, verbose_name='Заявка', on_delete=models.SET_NULL, null=True)
+
+    status = models.CharField(verbose_name='Статус', choices=Application.STATUS, max_length=20)
+

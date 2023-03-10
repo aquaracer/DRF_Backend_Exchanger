@@ -14,7 +14,7 @@ class BothHttpAndHttpsSchemaGenerator(OpenAPISchemaGenerator):
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Backend Unit",
+        title="Exchanger",
         default_version='v1',
         description="Test description",
         license=openapi.License(name="BSD License"),

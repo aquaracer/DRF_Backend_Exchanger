@@ -7,5 +7,6 @@ router.register('user_account', views.UserAccountListViewSet, basename='Accounts
 router.register('user_transaction', views.UserTransactionsViewSet, basename='Transactions')
 router.register('admin_account', views.AdminTransactionsViewSet, basename='Administrator')
 router.register('admin_transaction', views.AdminTransactionsViewSet, basename='Administrator')
+router.register('user_application', views.UserApplicationViewSet, basename='Application')
 
 urlpatterns = router.urls

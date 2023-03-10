@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.decorators import method_decorator
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework.mixins import ListModelMixin, UpdateModelMixin
+from rest_framework.mixins import ListModelMixin, UpdateModelMixin, CreateModelMixin
 from django.db.models import Q
 from django.db import transaction
 from rest_framework.filters import OrderingFilter
@@ -12,17 +12,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from backend_exchanger.swagger_schema import TOKENS_PARAMETER
 from .serializers import AccountSerializer, TransactionSerializer, YourselfTransactionSerializer, \
-    UpdateBalanceSerializer
-from .models import Account, Transaction
+    UpdateBalanceSerializer, ApplicationSerializer, CreateApplicationSerializer
+from .models import Account, Transaction, Application
 from .filters import TranscationFilter, AccountFilter
-from .services import send_funds
+from .services import send_funds, create_application, to_handle_webhook
 from .pagination import TranscationPagination, AccountPagination
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['worker'], operation_description='Получение списка счетов пользователя', ** TOKENS_PARAMETER))
+    tags=['user/accounts'], operation_description='Список счетов пользователя', **TOKENS_PARAMETER))
 class UserAccountListViewSet(GenericViewSet, ListModelMixin):
-    """Получения списка счетов пользователя"""
+    """Список счетов пользователя"""
 
     serializer_class = AccountSerializer
     permission_classes = (IsAuthenticated,)
@@ -138,3 +138,37 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
             return AccountSerializer
         elif self.action == 'partial_update':
             return UpdateBalanceSerializer
+
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    tags=['Administrator'], operation_description='Получение списка счетов пользователя', **TOKENS_PARAMETER))
+@method_decorator(name='create', decorator=swagger_auto_schema(tags=['application'], operation_description='Cоздание заявки', **TOKENS_PARAMETER))
+class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
+    """Заявка на вывод средств в личном кабинете пользователя"""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return Application.objects.filter(account__user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateApplicationSerializer
+        else:
+            return ApplicationSerializer
+
+
+    def create(self, request, *args, **kwargs):
+        """Создание заявки"""
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = create_application(serializer, request)
+        return Response(data=data)
+
+    @swagger_auto_schema(method='POST', tags=['application'], serializer_class=ApplicationSerializer, **TOKENS_PARAMETER)
+    @action(detail=False, methods=['POST'])
+    def webhook_handler(self, request):
+        """Обработка вебхука"""
+
+        data = to_handle_webhook(request)
+        return Response(data=data)

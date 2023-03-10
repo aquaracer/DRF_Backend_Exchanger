@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import Account, Transaction
+from .models import Account, Transaction, Application
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -52,3 +52,17 @@ class UpdateBalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = ('balance',)
+
+class CreateApplicationSerializer(serializers.ModelSerializer):
+    """Создание заявки на вывод средств"""
+
+    class Meta:
+        model = Application
+        fields = ('amount', 'type')
+
+class ApplicationSerializer(serializers.ModelSerializer):
+    """Заявка на вывод средств"""
+
+    class Meta:
+        model = Application
+        fields = '__all__'
