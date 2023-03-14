@@ -8,7 +8,7 @@ from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from .models import User
-from .serializers import UserSerializer, UserGetInfoSerializer, UserUpdateInfoSerializer
+from .serializers import UserSerializer, GetUserInfoSerializer, UpdateUserInfoSerializer
 from backend_exchanger.swagger_schema import TOKENS_PARAMETER
 from .services import signup_user
 
@@ -38,9 +38,9 @@ class UserAreaViewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
-            return UserGetInfoSerializer
+            return GetUserInfoSerializer
         elif self.action == 'partial_update':
-            return UserUpdateInfoSerializer
+            return UpdateUserInfoSerializer
 
     def get_queryset(self):
         return User.objects.filter(id=self.request.user.id)
@@ -52,3 +52,4 @@ class UserAreaViewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response()
+

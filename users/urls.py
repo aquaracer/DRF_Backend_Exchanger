@@ -10,5 +10,4 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path('signup', views.UserSignupView.as_view()),
-    path('connect_receipt_suborder', views.connect_receipt_suborder),
 ]

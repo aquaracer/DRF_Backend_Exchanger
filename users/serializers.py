@@ -29,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserGetInfoSerializer(serializers.ModelSerializer):
+class GetUserInfoSerializer(serializers.ModelSerializer):
     """Информация о пользователе"""
 
     userinfo = serializers.SerializerMethodField('get_userinfo')
@@ -50,7 +50,7 @@ class UserGetInfoSerializer(serializers.ModelSerializer):
         return UserInfoSerializer(UserAdditionalInfo.objects.get(user=obj)).data
 
 
-class UserUpdateInfoSerializer(UserSerializer):
+class UpdateUserInfoSerializer(UserSerializer):
     """Изменение информации о пользователе"""
 
     password = serializers.CharField(read_only=True)
@@ -62,6 +62,6 @@ class UserUpdateInfoSerializer(UserSerializer):
             nested_data = validated_data.pop('userinfo')
             nested_serializer.update(nested_instance, nested_data)
 
-        return super(UserUpdateInfoSerializer, self).update(instance, validated_data)
+        return super(UpdateUserInfoSerializer, self).update(instance, validated_data)
 
 
