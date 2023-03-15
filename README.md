@@ -76,6 +76,14 @@
 
 ##
 
+### Сборка контейнера docker
+
+```bash
+docker-compose --build
+```
+
+
+
 ### Запуск приложения через docker-compose
 
 ```bash
