@@ -60,8 +60,8 @@ def send_funds(serializer, request):
     if not Account.objects.filter(number=senders_account, balance__gte=amount_to_send).exists():
         raise ValidationError('На счете недостаточно средств')
 
-    Account.select_for_update().filter(number=senders_account).update(balance=F('balance') - amount_to_send)
-    Account.select_for_update().filter(number=receivers_account).update(balance=F('balance') - amount_to_receive)
+    Account.objects.filter(number=senders_account).update(balance=F('balance') - amount_to_send)
+    Account.objects.filter(number=receivers_account).update(balance=F('balance') + amount_to_receive)
 
     if receiver_type == 'self':
         debit_description = 'перевод средств между своими счетами'
@@ -70,17 +70,20 @@ def send_funds(serializer, request):
         debit_description = 'перевод средств другому пользователю'
         credit_description = 'зачисление средств от другого пользователя'
 
+    sender = Account.objects.get(number=senders_account)
+    receiver = Account.objects.get(number=receivers_account)
+
     batch = [
         Transaction(
-            sender_account=senders_account,
-            reciever_account=receivers_account,
+            sender_account=sender,
+            reciever_account=receiver,
             description=debit_description,
             amount=amount_to_send,
             transaction_type=Transaction.DEBIT
         ),
         Transaction(
-            sender_account=senders_account,
-            reciever_account=receivers_account,
+            sender_account=sender,
+            reciever_account=receiver,
             description=credit_description,
             amount=amount_to_send,
             transaction_type=Transaction.CREDIT
@@ -113,7 +116,7 @@ def create_application(serializer, request):
             },
             "confirmation": {
                 "type": "redirect",
-                "return_url": "https://www.example.com/return_url"
+                "return_url": os.environ.get('YOOKASSA_RETURN_URL')
             },
             "description": f"Заявка на поплнение счета {application.id}"
         }, str(uuid.uuid4()))
@@ -121,12 +124,13 @@ def create_application(serializer, request):
         logger.error(msg={'Ошибка на стороне Yookassa при создании платежа': error})
         raise BadRequest('Ошибка на стороне Yookassa при создании платежа', error)
 
-    data = {'confirmation_url': payment.confirmation.confirmation_url}
-
     application.payment_id = payment.payment_method.id
     application.save()
 
-    return data
+    return {
+        'confirmation_url': payment.confirmation.confirmation_url,
+        'payment_id': payment.payment_method.id
+    }
 
 
 def to_handle_webhook(request):
@@ -134,14 +138,13 @@ def to_handle_webhook(request):
 
     Configuration.account_id = os.environ.get('YOOKASSA_ACCOUNT_ID')
     Configuration.secret_key = os.environ.get('YOOKASSA_SECRET_KEY')
-    event_json = json.loads(request.body)
 
+    event_json = json.loads(request.body)
     try:
         notification_object = WebhookNotification(event_json)
     except Exception as error:
         logger.error(msg={'Не удалось получить данный из джейсон при обработке webhook от Yookassa': error})
         raise BadRequest('Не удалось получить данный из джейсон при обработке webhook от Yookassa', error)
-
 
     payment_id = notification_object.object.id
 
@@ -179,7 +182,12 @@ def to_handle_webhook(request):
     else:
         raise BadRequest(f'Ошибка на стороне Yookassa. Платежа {payment_id} не переведен в статус succeeded', None)
 
-    data = {'payment': payment}
-    return data
 
+def get_exchange_rates():
+    """Получение курсов валют из Redis"""
 
+    redis_instance = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=os.environ.get('REDIS_PORT'), db=0)
+    rates = {}
+    for currency in ['USD', 'EUR', 'CNY']:
+        rates[currency] = redis_instance.get(currency)
+    return rates

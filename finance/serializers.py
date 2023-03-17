@@ -14,7 +14,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TransactionSerializer(serializers.Serializer):
+class TransactionSerializer(serializers.ModelSerializer):
     """Транзакция"""
 
     class Meta:
@@ -22,8 +22,8 @@ class TransactionSerializer(serializers.Serializer):
         fields = '__all__'
 
 
-class YourselfTransactionSerializer(serializers.Serializer):
-    """Перевод себе"""
+class CreateTransactionSerializer(serializers.Serializer):
+    """Совершение перевода"""
 
     senders_account = serializers.UUIDField(required=True)
     amount_to_send = serializers.DecimalField(required=True, min_value=0.01, max_digits=11, decimal_places=2)

@@ -9,13 +9,14 @@ from django.db.models import Q
 from django.db import transaction
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
 
 from backend_exchanger.swagger_schema import TOKENS_PARAMETER
-from .serializers import AccountSerializer, TransactionSerializer, YourselfTransactionSerializer, \
+from .serializers import AccountSerializer, TransactionSerializer, CreateTransactionSerializer, \
     UpdateBalanceSerializer, ApplicationSerializer, CreateApplicationSerializer
 from .models import Account, Transaction, Application
 from .filters import TranscationFilter, AccountFilter
-from .services import send_funds, create_application, to_handle_webhook
+from .services import send_funds, create_application, to_handle_webhook, get_exchange_rates
 from .pagination import TranscationPagination, AccountPagination
 
 
@@ -76,8 +77,8 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
     """
 
     def get_serializer_class(self):
-        if self.action == 'transfer_funds_yourself':
-            return YourselfTransactionSerializer
+        if self.action == 'transfer_funds':
+            return CreateTransactionSerializer
         else:
             return TransactionSerializer
 
@@ -85,10 +86,10 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
         return Transaction.objects.filter(
             Q(sender_account__user=self.request.user, transaction_type=Transaction.DEBIT) |
             Q(reciever_account__user=self.request.user, transaction_type=Transaction.CREDIT)
-        ).order_by('-created')
+        ).prefetch_related('sender_account', 'reciever_account').order_by('-created')
 
     @swagger_auto_schema(method='POST', tags=['Transaction'],
-                         serializer_class=YourselfTransactionSerializer, **TOKENS_PARAMETER)
+                         serializer_class=CreateTransactionSerializer, **TOKENS_PARAMETER)
     @action(detail=False, methods=['POST'])
     @transaction.atomic
     def transfer_funds(self, request):
@@ -98,8 +99,18 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        send_funds(serializer)
+        send_funds(serializer, request)
         return Response()
+
+    @swagger_auto_schema(method='GET', tags=['Transaction'], **TOKENS_PARAMETER)
+    @action(detail=False, methods=['GET'])
+    def get_rates(self, request):
+        """
+        Получить курсы валют
+        """
+
+        rates = get_exchange_rates()
+        return Response(data=rates)
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -139,9 +150,12 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
         elif self.action == 'partial_update':
             return UpdateBalanceSerializer
 
+
 @method_decorator(name='list', decorator=swagger_auto_schema(
     tags=['Administrator'], operation_description='Получение списка счетов пользователя', **TOKENS_PARAMETER))
-@method_decorator(name='create', decorator=swagger_auto_schema(tags=['application'], operation_description='Cоздание заявки', **TOKENS_PARAMETER))
+@method_decorator(name='create',
+                  decorator=swagger_auto_schema(tags=['application'], operation_description='Cоздание заявки',
+                                                **TOKENS_PARAMETER))
 class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
     """Заявка на вывод средств в личном кабинете пользователя"""
 
@@ -156,19 +170,19 @@ class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
         else:
             return ApplicationSerializer
 
-
     def create(self, request, *args, **kwargs):
         """Создание заявки"""
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = create_application(serializer, request)
-        return Response(data=data)
+        return Response(data=data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(method='POST', tags=['application'], serializer_class=ApplicationSerializer, **TOKENS_PARAMETER)
+    @swagger_auto_schema(method='POST', tags=['application'], serializer_class=ApplicationSerializer,
+                         **TOKENS_PARAMETER)
     @action(detail=False, methods=['POST'])
     def webhook_handler(self, request):
         """Обработка вебхука"""
 
-        data = to_handle_webhook(request)
-        return Response(data=data)
+        to_handle_webhook(request)
+        return Response()
