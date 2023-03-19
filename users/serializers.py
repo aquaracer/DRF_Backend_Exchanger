@@ -37,7 +37,6 @@ class GetUserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username',
             'first_name',
             'last_name',
             'middle_name',

@@ -96,7 +96,6 @@ class UsersTests(APITestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + str(self.user_1_token))
         updated_data = {
-            "username": "user@example.com",
             "first_name": "Иван1",
             "last_name": "Иванов1",
             "middle_name": "Иванович1",
