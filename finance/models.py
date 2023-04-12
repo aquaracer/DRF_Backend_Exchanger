@@ -51,8 +51,7 @@ class Transaction(AbstarctBaseModel):
         (CREDIT, 'Пополнение'),
     )
 
-    sender_account = models.ForeignKey(Account, verbose_name='Счет отправителя', on_delete=models.SET_NULL, null=True,
-                                       related_name='sender_account')
+    sender_account = models.ForeignKey(Account, verbose_name='Счет отправителя', on_delete=models.SET_NULL, null=True, related_name='sender_account')
     reciever_account = models.ForeignKey(Account, verbose_name='Счет получателя', on_delete=models.SET_NULL, null=True,
                                          related_name='receiver_account')
     currency = models.ForeignKey(Currency, verbose_name='Валюта', on_delete=models.SET_NULL, null=True)
