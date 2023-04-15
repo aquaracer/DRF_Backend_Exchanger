@@ -49,7 +49,7 @@ class UserAccountListViewSet(GenericViewSet, ListModelMixin):
     decorator=swagger_auto_schema(
         tags=['Transaction'],
         operation_description='Получение списка всех транзакций в личном кабинете Администратора',
-        **TOKENS_PARAMETER
+        **TOKENS_PARAMETER,
     )
 )
 class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
@@ -88,7 +88,7 @@ class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
     decorator=swagger_auto_schema(
         tags=['Transaction'],
         operation_description='Получение списка счетов пользователя',
-        **TOKENS_PARAMETER)
+        **TOKENS_PARAMETER),
 )
 class UserTransactionsViewSet(AdminTransactionsViewSet):
     """
@@ -114,7 +114,7 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
         method='POST',
         tags=['Transaction'],
         serializer_class=CreateTransactionSerializer,
-        **TOKENS_PARAMETER
+        **TOKENS_PARAMETER,
     )
     @action(detail=False, methods=['POST'])
     @transaction.atomic
@@ -144,7 +144,7 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
     decorator=swagger_auto_schema(
         tags=['Administrator'],
         operation_description='Получение списка счетов пользователя',
-        **TOKENS_PARAMETER
+        **TOKENS_PARAMETER,
     )
 )
 @method_decorator(
@@ -175,7 +175,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
 
     permission_classes = (IsAuthenticated,)
     filter_backends = (OrderingFilter, DjangoFilterBackend,)
-    ordering_fields = ['created', 'balance']
+    ordering_fields = ['created', 'balance',]
     filterset_class = AccountFilter
     pagination = AccountPagination
 
@@ -194,7 +194,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
     decorator=swagger_auto_schema(
         tags=['Administrator'],
         operation_description='Получение списка счетов пользователя',
-        **TOKENS_PARAMETER
+        **TOKENS_PARAMETER,
     )
 )
 @method_decorator(
@@ -202,7 +202,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
     decorator=swagger_auto_schema(
         tags=['application'],
         operation_description='Cоздание заявки',
-        **TOKENS_PARAMETER
+        **TOKENS_PARAMETER,
     )
 )
 class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
