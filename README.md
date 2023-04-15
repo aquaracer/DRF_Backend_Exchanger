@@ -1,9 +1,7 @@
 # Бэкенд для веб-сайта/мобильного приложения обмена валют
 
-## Техническое задание
+### Технологический стек: Python, Django, DjangoRestFramework, PostgreSQL, Celery, RabbitMQ, Redis, Sentry, YookassaAPI, Unittest, Swagger, Docker, Docker-Compose
 
-### Разработан бэкенд приложения обмена валют.
-Технологический стек: Python, Django, DjangoRestFramework, PostgreSQL, Celery, RabbitMQ, Redis, Sentry, YookassaAPI, Unittest, Swagger, Docker, Docker-Compose
 Реализован следующий функционал:
 
 #### 1. Создание таблицы Currency с 4 основными валютами: RUR, EUR, USD, CNY. В таблице должны быть следующие столбцы: краткое название валюты, полное название валюты, код валюты, символ валюты. Создана миграция с данными по 4 основным валютам для автоматического заполнения таблицы при развертывании проекта.
