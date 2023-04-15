@@ -1,9 +1,9 @@
+from django.db.models import Q
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from django.db.models import F, Q
 
-from finance.models import Currency, Account, Transaction
+from finance.models import Account, Transaction
 from finance.serializers import AccountSerializer, TransactionSerializer
 from users.models import User, UserAdditionalInfo
 

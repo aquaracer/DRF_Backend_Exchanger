@@ -1,27 +1,39 @@
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from drf_yasg.utils import swagger_auto_schema
-from django.utils.decorators import method_decorator
+from rest_framework import status
+from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.mixins import ListModelMixin, UpdateModelMixin, CreateModelMixin
+from drf_yasg.utils import swagger_auto_schema
+from django.utils.decorators import method_decorator
 from django.db.models import Q
 from django.db import transaction
-from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
 
 from backend_exchanger.swagger_schema import TOKENS_PARAMETER
-from .serializers import AccountSerializer, TransactionSerializer, CreateTransactionSerializer, \
-    UpdateBalanceSerializer, ApplicationSerializer, CreateApplicationSerializer
+from .serializers import (
+    AccountSerializer,
+    TransactionSerializer,
+    CreateTransactionSerializer,
+    UpdateBalanceSerializer,
+    ApplicationSerializer,
+    CreateApplicationSerializer,
+)
 from .models import Account, Transaction, Application
 from .filters import TranscationFilter, AccountFilter
 from .services import send_funds, create_application, to_handle_webhook, get_exchange_rates
 from .pagination import TranscationPagination, AccountPagination
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['user/accounts'], operation_description='Список счетов пользователя', **TOKENS_PARAMETER))
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        tags=['user/accounts'],
+        operation_description='Список счетов пользователя',
+        **TOKENS_PARAMETER,
+    ),
+)
 class UserAccountListViewSet(GenericViewSet, ListModelMixin):
     """Список счетов пользователя"""
 
@@ -32,9 +44,14 @@ class UserAccountListViewSet(GenericViewSet, ListModelMixin):
         return Account.objects.filter(user=self.request.user)
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['Transaction'], operation_description='Получение списка всех транзакций в личном кабинете Администратора',
-    **TOKENS_PARAMETER))
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        tags=['Transaction'],
+        operation_description='Получение списка всех транзакций в личном кабинете Администратора',
+        **TOKENS_PARAMETER
+    )
+)
 class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
     """
     Список всех транзакций в личном кабинете Администатора.
@@ -54,7 +71,7 @@ class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
     """
 
     permission_classes = (IsAuthenticated,)
-    filter_backends = (OrderingFilter, DjangoFilterBackend)
+    filter_backends = (OrderingFilter, DjangoFilterBackend,)
     ordering_fields = ['created', 'amount']
     filterset_class = TranscationFilter
     pagination_class = TranscationPagination
@@ -66,8 +83,13 @@ class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
         return TransactionSerializer
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['Transaction'], operation_description='Получение списка счетов пользователя', **TOKENS_PARAMETER))
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        tags=['Transaction'],
+        operation_description='Получение списка счетов пользователя',
+        **TOKENS_PARAMETER)
+)
 class UserTransactionsViewSet(AdminTransactionsViewSet):
     """
     Создание транзакции и список транзакций в личном кабинете Юзера.
@@ -88,8 +110,12 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
             Q(reciever_account__user=self.request.user, transaction_type=Transaction.CREDIT)
         ).prefetch_related('sender_account', 'reciever_account').order_by('-created')
 
-    @swagger_auto_schema(method='POST', tags=['Transaction'],
-                         serializer_class=CreateTransactionSerializer, **TOKENS_PARAMETER)
+    @swagger_auto_schema(
+        method='POST',
+        tags=['Transaction'],
+        serializer_class=CreateTransactionSerializer,
+        **TOKENS_PARAMETER
+    )
     @action(detail=False, methods=['POST'])
     @transaction.atomic
     def transfer_funds(self, request):
@@ -113,10 +139,22 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
         return Response(data=rates)
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['Administrator'], operation_description='Получение списка счетов пользователя', **TOKENS_PARAMETER))
-@method_decorator(name='partial_update', decorator=swagger_auto_schema(
-    tags=['Administrator'], operation_description='Пополнение баланса пользователя', **TOKENS_PARAMETER))
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        tags=['Administrator'],
+        operation_description='Получение списка счетов пользователя',
+        **TOKENS_PARAMETER
+    )
+)
+@method_decorator(
+    name='partial_update',
+    decorator=swagger_auto_schema(
+        tags=['Administrator'],
+        operation_description='Пополнение баланса пользователя',
+        **TOKENS_PARAMETER,
+    ),
+)
 class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
     """
     Счета пользователей в личном кабинете Администратора
@@ -136,7 +174,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
     """
 
     permission_classes = (IsAuthenticated,)
-    filter_backends = (OrderingFilter, DjangoFilterBackend)
+    filter_backends = (OrderingFilter, DjangoFilterBackend,)
     ordering_fields = ['created', 'balance']
     filterset_class = AccountFilter
     pagination = AccountPagination
@@ -151,11 +189,22 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
             return UpdateBalanceSerializer
 
 
-@method_decorator(name='list', decorator=swagger_auto_schema(
-    tags=['Administrator'], operation_description='Получение списка счетов пользователя', **TOKENS_PARAMETER))
-@method_decorator(name='create',
-                  decorator=swagger_auto_schema(tags=['application'], operation_description='Cоздание заявки',
-                                                **TOKENS_PARAMETER))
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        tags=['Administrator'],
+        operation_description='Получение списка счетов пользователя',
+        **TOKENS_PARAMETER
+    )
+)
+@method_decorator(
+    name='create',
+    decorator=swagger_auto_schema(
+        tags=['application'],
+        operation_description='Cоздание заявки',
+        **TOKENS_PARAMETER
+    )
+)
 class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
     """Заявка на вывод средств в личном кабинете пользователя"""
 
@@ -178,8 +227,12 @@ class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
         data = create_application(serializer, request)
         return Response(data=data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(method='POST', tags=['application'], serializer_class=ApplicationSerializer,
-                         **TOKENS_PARAMETER)
+    @swagger_auto_schema(
+        method='POST',
+        tags=['application'],
+        serializer_class=ApplicationSerializer,
+        **TOKENS_PARAMETER,
+    )
     @action(detail=False, methods=['POST'])
     def webhook_handler(self, request):
         """Обработка вебхука"""

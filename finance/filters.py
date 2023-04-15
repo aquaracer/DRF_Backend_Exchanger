@@ -37,8 +37,7 @@ class TranscationFilter(df_filters.FilterSet):
 class AccountFilter(df_filters.FilterSet):
     """Фильтр списка счетов"""
 
-    currency = MultipleFilter(field_name='currency__short_name', lookup_expr='exact',
-                              widget=CSVWidget)
+    currency = MultipleFilter(field_name='currency__short_name', lookup_expr='exact', widget=CSVWidget)
     balance_from = df_filters.NumberFilter(field_name='balance', lookup_expr='gte')
     balance_up_to = df_filters.NumberFilter(field_name='balance', lookup_expr='lte')
     username = df_filters.NumberFilter(field_name='user__username', lookup_expr='lte')

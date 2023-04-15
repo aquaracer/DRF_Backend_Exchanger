@@ -10,13 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-from pathlib import Path
 import os, logging, sentry_sdk
+from pathlib import Path
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,37 +46,32 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_celery_results',
     'django_filters',
+    'django_celery_beat',
+
     'users',
     'finance',
 ]
 
 RABBITMQ = {
     'default': {
-        'HOST': 'localhost',
-        'PORT': 15672,
-        'VIRTUAL_HOST': '/',
+        'HOST': os.getenv("RABBITMQ_HOST"),
+        'PORT': os.getenv("RABBITMQ_PORT"),
+        'VIRTUAL_HOST': os.getenv("RABBITMQ_VIRTUAL_HOST"),
         'USER': os.getenv('RABBITMQ_USER'),
         'PASSWORD': os.getenv('RABBITMQ_PASSWORD'),
-        'QUEUE': 'queue'
+        'QUEUE': os.getenv("RABBITMQ_QUEUE")
     }
 }
 
 sentry_logging = LoggingIntegration(
-    level=logging.INFO,        # Capture info and above as breadcrumbs
-    event_level=logging.ERROR  # Send errors as events
+    level=logging.INFO,
+    event_level=logging.ERROR
 )
 
 sentry_sdk.init(
     dsn=os.environ.get("SENTRY_DSN"),
     integrations=[DjangoIntegration(), CeleryIntegration(), sentry_logging],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
     traces_sample_rate=1.0,
-
-    # If you wish to associate users to errors (assuming you are using
-    # django.contrib.auth) you may enable sending PII data.
     send_default_pii=True,
     environment=os.getenv('SENTRY_ENV')
 )
@@ -98,8 +91,7 @@ ROOT_URLCONF = 'backend_exchanger.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -173,6 +165,7 @@ CELERY_RESULT_BACKEND = 'django-db'
 # Celery settings
 CELERY_BROKER_URL = f'amqp://{os.getenv("RABBITMQ_USER")}:{os.getenv("RABBITMQ_PASSWORD")}@{os.getenv("RABBITMQ_HOST")}:{os.getenv("RABBITMQ_PORT")}'
 CELERYD_MAX_TASKS_PER_CHILD = 5
+CELERY_BEAT_SCHEDULER = os.getenv("CELERY_BEAT_SCHEDULER")
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework.authentication.TokenAuthentication',),

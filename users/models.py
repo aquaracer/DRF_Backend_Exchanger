@@ -24,10 +24,7 @@ class User(AbstractUser):
         max_length=16,
         validators=[
             MinLengthValidator(12),
-            RegexValidator(
-                regex=r'^\+?1?\d{11}$',
-                message='Телефон должен быть в формате: +7999999999'
-            )
+            RegexValidator(regex=r'^\+?1?\d{11}$', message='Телефон должен быть в формате: +7999999999')
         ],
         unique=True,
         blank=True,
@@ -54,24 +51,47 @@ class UserAdditionalInfo(AbstarctBaseModel):
         (W, "Женский")
     )
 
-    user = models.OneToOneField(User, verbose_name='Пользователь', on_delete=models.CASCADE, default='',
-                                null=True, blank=True)
+    user = models.OneToOneField(
+        User,
+        verbose_name='Пользователь',
+        on_delete=models.CASCADE,
+        default='',
+        null=True,
+        blank=True
+    )
 
     date_of_birth = models.DateField(verbose_name='Дата рождения', null=True, blank=True)
     sex = models.CharField(verbose_name='Пол', choices=SEX, max_length=30, default=M, blank=True)
-    passport_photo_reversal = models.ImageField(verbose_name='Фото разворота паспорта',
-                                                upload_to='passport_photo_reversal', blank=True)
-    passport_photo_registered_address = models.ImageField(verbose_name='Фото страницы с пропиской',
-                                                          upload_to='passport_photo_reversal', blank=True)
+    passport_photo_reversal = models.ImageField(
+        verbose_name='Фото разворота паспорта',
+        upload_to='passport_photo_reversal',
+        blank=True,
+    )
+    passport_photo_registered_address = models.ImageField(
+        verbose_name='Фото страницы с пропиской',
+        upload_to='passport_photo_reversal',
+        blank=True,
+    )
     registered_address = models.CharField(verbose_name='Прописка', max_length=250, null=True, blank=True)
-    passport_series = models.CharField(verbose_name='Серия паспорта',
-                                       validators=[MinLengthValidator(4), RegexValidator("^[0-9]+$")],
-                                       max_length=4, null=True, blank=True)
-    passport_number = models.CharField(verbose_name='Номер паспорта',
-                                       validators=[MinLengthValidator(6), RegexValidator("^[0-9]+$")], max_length=6,
-                                       default='')
-    subdivision_code = models.CharField(verbose_name='Код подразделения', validators=[MinLengthValidator(7)],
-                                        max_length=7, default='')
+    passport_series = models.CharField(
+        verbose_name='Серия паспорта',
+        validators=[MinLengthValidator(4), RegexValidator("^[0-9]+$")],
+        max_length=4,
+        null=True,
+        blank=True,
+    )
+    passport_number = models.CharField(
+        verbose_name='Номер паспорта',
+        validators=[MinLengthValidator(6), RegexValidator("^[0-9]+$")],
+        max_length=6,
+        default='',
+    )
+    subdivision_code = models.CharField(
+        verbose_name='Код подразделения',
+        validators=[MinLengthValidator(7)],
+        max_length=7,
+        default='',
+    )
     date_of_issue = models.DateField(verbose_name='Дата выдачи паспорта', null=True, blank=True)
 
     class Meta:

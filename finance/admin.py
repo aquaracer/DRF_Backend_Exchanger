@@ -17,9 +17,8 @@ class CurrencyAdmin(admin.ModelAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ('account',  'currency', 'payment_id', 'amount', 'type', 'status' , 'error' )
+    list_display = ('account', 'currency', 'payment_id', 'amount', 'type', 'status', 'error')
     readonly_fields = ('payment_id',)
-
-

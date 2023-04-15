@@ -1,9 +1,9 @@
+import redis, os, uuid, json, requests, logging
+from requests import RequestException
 from django.db.models import F
 from rest_framework.exceptions import ValidationError
-import redis, os, uuid, json, requests, logging
 from yookassa import Payment, Configuration
 from yookassa.domain.notification import WebhookNotification
-from requests import RequestException
 
 from .models import Account, Transaction, Currency, Application, ApplicationLog
 from .tasks import send_notification

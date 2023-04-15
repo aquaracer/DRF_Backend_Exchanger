@@ -15,7 +15,7 @@ logger = logging.getLogger('__name__')
     default_retry_delay=os.getenv('CELERY_TASK_RETRY_TIME', 30),
     queue='send_notification'
 )
-def send_notification(senders_account, receivers_account, amount_to_receive, currency_to_receive):
+def send_notification(self, senders_account, receivers_account, amount_to_receive, currency_to_receive):
     """Отправка пользователю смс уведомления о входящем платеже"""
 
     sender = get_object_or_404(User, account=senders_account)
@@ -31,9 +31,13 @@ def send_notification(senders_account, receivers_account, amount_to_receive, cur
             return response
 
 
-@app.task(bind=True, soft_time_limit=os.getenv('CELERY_TASK_TIMEOUT', 300),
-          default_retry_delay=os.getenv('CELERY_TASK_RETRY_TIME', 30), queue='update_exchange_rates')
-def update_exchange_rates():
+@app.task(
+    bind=True,
+    soft_time_limit=os.getenv('CELERY_TASK_TIMEOUT', 300),
+    default_retry_delay=os.getenv('CELERY_TASK_RETRY_TIME', 30),
+    queue='update_exchange_rates'
+)
+def update_exchange_rates(self):
     """Обновление курсов валют"""
 
     response = advanced_get_request(os.environ.get('CURRENCY_COURSES_URL'), 3)

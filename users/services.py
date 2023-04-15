@@ -9,8 +9,7 @@ def signup_user(self, request):
     serializer = self.get_serializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     userinfo = serializer.validated_data.pop('userinfo')
-    user = User.objects.create_user(**serializer.validated_data)
-    userinfo['user'] = user
+    userinfo['user'] = User.objects.create_user(**serializer.validated_data)
     UserAdditionalInfo.objects.create(**userinfo)
 
 
