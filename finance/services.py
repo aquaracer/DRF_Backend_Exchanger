@@ -1,7 +1,10 @@
-import redis, os, uuid, json, requests, logging
+import redis, os, uuid, json, logging
+from _decimal import Decimal
 from requests import RequestException
 from django.db.models import F
 from rest_framework.exceptions import ValidationError
+from rest_framework.request import Request
+from rest_framework.serializers import Serializer
 from yookassa import Payment, Configuration
 from yookassa.domain.notification import WebhookNotification
 
@@ -12,7 +15,7 @@ from common.exceptions import BadRequest
 logger = logging.getLogger('__name__')
 
 
-def calculate_new_amounts(debit_currency, credit_currency, debit_amount):
+def calculate_new_amounts(debit_currency: str, credit_currency: str, debit_amount: Decimal) -> Decimal:
     """Рассчет суммы к зачислению при переводе средств"""
 
     redis_instance = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=os.environ.get('REDIS_PORT'), db=0)
@@ -30,7 +33,7 @@ def calculate_new_amounts(debit_currency, credit_currency, debit_amount):
     return new_amount
 
 
-def send_funds(serializer, request):
+def send_funds(serializer: Serializer, request: Request) -> None:
     """Перевод средств (на свой аккаунт или аккаунт другого пользователя)"""
 
     senders_account = serializer.validated_data.get('senders_account')
@@ -79,14 +82,14 @@ def send_funds(serializer, request):
             reciever_account=receiver,
             description=debit_description,
             amount=amount_to_send,
-            transaction_type=Transaction.DEBIT
+            transaction_type=Transaction.DEBIT,
         ),
         Transaction(
             sender_account=sender,
             reciever_account=receiver,
             description=credit_description,
             amount=amount_to_send,
-            transaction_type=Transaction.CREDIT
+            transaction_type=Transaction.CREDIT,
         ),
     ]
     Transaction.objects.bulk_create(batch)
@@ -95,31 +98,37 @@ def send_funds(serializer, request):
         send_notification.delay(senders_account, receivers_account, currency_to_receive)
 
 
-def create_application(serializer, request):
+def create_application(serializer: Serializer, request: Request) -> dict:
     """Создание завяки на ввод средств"""
 
+    # задаем учетку
     Configuration.account_id = os.environ.get('YOOKASSA_ACCOUNT_ID')
     Configuration.secret_key = os.environ.get('YOOKASSA_SECRET_KEY')
 
+    # создаем сущность заявки
     currency = Currency.objects.get(short_name='RUR')
     account_id = Account.objects.filter(сurrency_id=currency.id, user=request.user).values_list('id', flat=True)[0]
     application = serializer.save(currency=currency, status=Application.PENDING, account_id=account_id)
 
+    # создаем заявку на оплату на внешнем сервисе
     try:
-        payment = Payment.create({
-            "amount": {
-                "value": str(serializer.validated_data.get('amount')),
-                "currency": "RUB"
+        payment = Payment.create(
+            {
+                "amount": {
+                    "value": str(serializer.validated_data.get('amount')),
+                    "currency": "RUB"
+                },
+                "payment_method_data": {
+                    "type": "bank_card"
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": os.environ.get('YOOKASSA_RETURN_URL')
+                },
+                "description": f"Заявка на поплнение счета {application.id}",
             },
-            "payment_method_data": {
-                "type": "bank_card"
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": os.environ.get('YOOKASSA_RETURN_URL')
-            },
-            "description": f"Заявка на поплнение счета {application.id}"
-        }, str(uuid.uuid4()))
+            str(uuid.uuid4()),
+        )
     except RequestException as error:
         logger.error(msg={'Ошибка на стороне Yookassa при создании платежа': error})
         raise BadRequest('Ошибка на стороне Yookassa при создании платежа', error)
@@ -133,26 +142,30 @@ def create_application(serializer, request):
     }
 
 
-def to_handle_webhook(request):
+def to_handle_webhook(request: Request) -> None:
     """Обработка вебхука"""
 
     Configuration.account_id = os.environ.get('YOOKASSA_ACCOUNT_ID')
     Configuration.secret_key = os.environ.get('YOOKASSA_SECRET_KEY')
 
+    # получаем джейсон
     event_json = json.loads(request.body)
+
     try:
         notification_object = WebhookNotification(event_json)
-    except Exception as error:
+    except Exception as error:  # здесь райзим validation error
         logger.error(msg={'Не удалось получить данный из джейсон при обработке webhook от Yookassa': error})
         raise BadRequest('Не удалось получить данный из джейсон при обработке webhook от Yookassa', error)
 
+    # получаем payment_id
     payment_id = notification_object.object.id
 
+    # проверяем есть ла такой платеж в базе
     if not Application.objects.filter(payment_id=payment_id, status=Application.PENDING).exists():
         return
 
     application = Application.objects.get(payment_id=payment_id)
-
+    # подтверждаем платеж
     try:
         Payment.capture(
             payment_id,
@@ -168,13 +181,15 @@ def to_handle_webhook(request):
         logger.error(msg={f'Ошибка на стороне Yookassa при подтверждении платежа {payment_id}': error})
         raise BadRequest(f'Ошибка на стороне Yookassa при подтверждении платежа {payment_id}', error)
 
+    # проверяем статус платежа get запросом
     try:
         payment = Payment.find_one(payment_id)
     except RequestException as error:
         logger.error(msg={f'Ошибка на стороне Yookassa при проверка статуса платежа {payment_id}': error})
         raise BadRequest(f'Ошибка на стороне Yookassa при проверка статуса платежа {payment_id}', error)
-
+    # если все ок  - обновляем статус, вносим запись в историю операций и пополняем баланс
     if payment.status == 'succeeded':
+        # если все ок - обновляем статус, вносим запись в историю операций и пополняем баланс
         Application.objects.filter(payment_id=payment_id).update(status=Application.COMPLETED)
         ApplicationLog.objects.create(application=application, status=Application.COMPLETED)
         Account.objects.filter(number=application.account.number).update(balance=F('balance') + application.amount)
@@ -183,7 +198,7 @@ def to_handle_webhook(request):
         raise BadRequest(f'Ошибка на стороне Yookassa. Платежа {payment_id} не переведен в статус succeeded', None)
 
 
-def get_exchange_rates():
+def get_exchange_rates() -> dict:
     """Получение курсов валют из Redis"""
 
     redis_instance = redis.StrictRedis(host=os.environ.get('REDIS_HOST'), port=os.environ.get('REDIS_PORT'), db=0)

@@ -29,7 +29,7 @@ class Account(AbstarctBaseModel):
     """Счет"""
 
     user = models.ForeignKey('users.User', verbose_name='Пользователь', on_delete=models.SET_NULL, null=True)
-    currency = models.ForeignKey(Currency, verbose_name='Валюта', on_delete=models.SET_NULL, null=True)
+    сurrency = models.ForeignKey(Currency, verbose_name='Валюта', on_delete=models.SET_NULL, null=True)
 
     number = models.UUIDField(verbose_name='Номер счета', default=uuid.uuid4)
     balance = models.DecimalField(

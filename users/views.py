@@ -32,7 +32,7 @@ class UserSignupView(CreateAPIView):
         tags=['users'],
         operation_description='Изменение информации о пользователе',
         **TOKENS_PARAMETER,
-    )
+    ),
 )
 @method_decorator(
     name='retrieve',
@@ -40,7 +40,7 @@ class UserSignupView(CreateAPIView):
         tags=['users'],
         operation_description='Вывод информации о пользователе',
         **TOKENS_PARAMETER,
-    )
+    ),
 )
 class UserAreaViewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     """

@@ -50,7 +50,7 @@ class UserAccountListViewSet(GenericViewSet, ListModelMixin):
         tags=['Transaction'],
         operation_description='Получение списка всех транзакций в личном кабинете Администратора',
         **TOKENS_PARAMETER,
-    )
+    ),
 )
 class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
     """
@@ -72,7 +72,7 @@ class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
 
     permission_classes = (IsAuthenticated,)
     filter_backends = (OrderingFilter, DjangoFilterBackend,)
-    ordering_fields = ['created', 'amount']
+    ordering_fields = ['created', 'amount',]
     filterset_class = TranscationFilter
     pagination_class = TranscationPagination
 
@@ -88,7 +88,8 @@ class AdminTransactionsViewSet(GenericViewSet, ListModelMixin):
     decorator=swagger_auto_schema(
         tags=['Transaction'],
         operation_description='Получение списка счетов пользователя',
-        **TOKENS_PARAMETER),
+        **TOKENS_PARAMETER,
+    ),
 )
 class UserTransactionsViewSet(AdminTransactionsViewSet):
     """
@@ -145,7 +146,7 @@ class UserTransactionsViewSet(AdminTransactionsViewSet):
         tags=['Administrator'],
         operation_description='Получение списка счетов пользователя',
         **TOKENS_PARAMETER,
-    )
+    ),
 )
 @method_decorator(
     name='partial_update',
@@ -175,7 +176,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
 
     permission_classes = (IsAuthenticated,)
     filter_backends = (OrderingFilter, DjangoFilterBackend,)
-    ordering_fields = ['created', 'balance',]
+    ordering_fields = ['created', 'balance']
     filterset_class = AccountFilter
     pagination = AccountPagination
 
@@ -195,7 +196,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
         tags=['Administrator'],
         operation_description='Получение списка счетов пользователя',
         **TOKENS_PARAMETER,
-    )
+    ),
 )
 @method_decorator(
     name='create',
@@ -203,7 +204,7 @@ class AdminAccountsViewSet(GenericViewSet, ListModelMixin, UpdateModelMixin):
         tags=['application'],
         operation_description='Cоздание заявки',
         **TOKENS_PARAMETER,
-    )
+    ),
 )
 class UserApplicationViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
     """Заявка на вывод средств в личном кабинете пользователя"""
