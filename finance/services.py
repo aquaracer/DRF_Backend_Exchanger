@@ -172,10 +172,10 @@ def to_handle_webhook(request: Request) -> None:
             {
                 "amount": {
                     "value": str(application.amount),
-                    "currency": "RUB"
-                }
+                    "currency": "RUB",
+                },
             },
-            str(uuid.uuid4())
+            str(uuid.uuid4()),
         )
     except RequestException as error:
         logger.error(msg={f'Ошибка на стороне Yookassa при подтверждении платежа {payment_id}': error})
