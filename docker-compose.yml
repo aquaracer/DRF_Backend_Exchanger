@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:13-alpine
+    image: postgres:16-alpine
     volumes:
       - pgdata:/var/lib/postgresql/data
     env_file:
@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.13-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -81,7 +81,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7.0.5-alpine
+    image: redis:7.2-alpine
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.49.1
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -107,7 +107,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     volumes:
       - grafana_data:/var/lib/grafana
     environment:

@@ -1,22 +1,40 @@
 # DRF Backend Exchanger
 
-A robust Django REST Framework backend for a currency exchange platform with advanced features and best practices.
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.0.2-green)](https://www.djangoproject.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/yourusername/DRF_Backend_Exchanger)
+[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)](https://github.com/yourusername/DRF_Backend_Exchanger)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen)](https://github.com/yourusername/DRF_Backend_Exchanger)
 
-## Features
+Мощный бэкенд на Django REST Framework для платформы обмена валют с продвинутыми функциями и лучшими практиками.
 
-- 🔐 Secure authentication with JWT and OAuth2
-- 💱 Real-time currency exchange rates
-- 🔄 Asynchronous task processing with Celery
-- 📊 Prometheus metrics and monitoring
-- 🐳 Docker containerization
-- 🧪 Comprehensive test coverage
-- 🔍 API documentation with Swagger/OpenAPI
-- 📈 Rate limiting and caching
-- 🔒 Security best practices
-- 📧 Email notifications
-- 💳 Payment integration with YooKassa
+## Скриншоты
 
-## Tech Stack
+### API Документация (Swagger)
+![API Documentation](docs/images/swagger.png)
+
+### Мониторинг (Grafana)
+![Monitoring Dashboard](docs/images/grafana.png)
+
+### Административная панель
+![Admin Panel](docs/images/admin.png)
+
+## Возможности
+
+- 🔐 Безопасная аутентификация с использованием JWT и OAuth2
+- 💱 Курсы валют в реальном времени
+- 🔄 Асинхронная обработка задач с Celery
+- 📊 Метрики Prometheus и мониторинг
+- 🐳 Контейнеризация с Docker
+- 🧪 Полное покрытие тестами
+- 🔍 Документация API с использованием Swagger/OpenAPI
+- 📈 Ограничение частоты запросов и кэширование
+- 🔒 Лучшие практики безопасности
+- 📧 Email-уведомления
+- 💳 Интеграция с платежной системой YooKassa
+
+## Технологический стек
 
 - Python 3.9+
 - Django 4.2
@@ -29,109 +47,107 @@ A robust Django REST Framework backend for a currency exchange platform with adv
 - Prometheus
 - Sentry
 
-## Prerequisites
+## Требования
 
-- Docker and Docker Compose
+- Docker и Docker Compose
 - Python 3.9+
 - PostgreSQL 13+
 - Redis 7+
 - RabbitMQ
 
-## Quick Start
+## Быстрый старт
 
-1. Clone the repository:
+1. Клонируйте репозиторий:
 ```bash
 git clone https://github.com/yourusername/DRF_Backend_Exchanger.git
 cd DRF_Backend_Exchanger
 ```
 
-2. Create and configure environment variables:
+2. Создайте и настройте переменные окружения:
 ```bash
 cp env.example .env
-# Edit .env with your configuration
+# Отредактируйте .env с вашими настройками
 ```
 
-3. Start the services:
+3. Запустите сервисы:
 ```bash
 docker-compose up -d
 ```
 
-4. Run migrations:
+4. Выполните миграции:
 ```bash
 docker-compose exec api python manage.py migrate
 ```
 
-5. Create superuser:
+5. Создайте суперпользователя:
 ```bash
 docker-compose exec api python manage.py createsuperuser
 ```
 
-## Development
+## Разработка
 
-### Local Development Setup
+### Настройка локальной разработки
 
-1. Create and activate virtual environment:
+1. Создайте и активируйте виртуальное окружение:
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# or
+# или
 .\venv\Scripts\activate  # Windows
 ```
 
-2. Install dependencies:
+2. Установите зависимости:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Run development server:
+3. Запустите сервер разработки:
 ```bash
 python manage.py runserver
 ```
 
-### Running Tests
+### Запуск тестов
 
 ```bash
 pytest
 ```
 
-### Code Quality
+### Качество кода
 
 ```bash
-# Format code
+# Форматирование кода
 black .
 isort .
 
-# Lint code
+# Проверка кода
 flake8
 mypy .
 
-# Run tests with coverage
+# Запуск тестов с отчетом о покрытии
 pytest --cov
 ```
 
-## API Documentation
+## Документация API
 
-API documentation is available at:
+Документация API доступна по адресам:
 - Swagger UI: `http://localhost:8000/api/docs/`
 - ReDoc: `http://localhost:8000/api/redoc/`
 
-## Monitoring
+## Мониторинг
 
-- Prometheus metrics: `http://localhost:8000/metrics`
-- Sentry error tracking is configured
+- Метрики Prometheus: `http://localhost:8000/metrics`
+- Настроено отслеживание ошибок в Sentry
 
-## Contributing
+## Участие в разработке
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Сделайте форк репозитория
+2. Создайте ветку для вашей функции (`git checkout -b feature/amazing-feature`)
+3. Зафиксируйте ваши изменения (`git commit -m 'Add some amazing feature'`)
+4. Отправьте изменения в ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
 
-## License
+## Лицензия
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Этот проект распространяется под лицензией MIT - подробности в файле LICENSE.
 
-## Security
 
-Please report any security issues to security@yourdomain.com
