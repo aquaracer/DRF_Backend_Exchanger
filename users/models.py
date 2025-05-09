@@ -1,3 +1,5 @@
+from typing import Optional, Any
+
 from django.db import models
 from django.core.validators import RegexValidator, MinLengthValidator
 from django.contrib.auth.models import AbstractUser
@@ -36,7 +38,7 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.id} | {self.first_name} | {self.last_name} |' f' {self.username}'
 
 
@@ -98,6 +100,6 @@ class UserAdditionalInfo(AbstarctBaseModel):
         verbose_name = 'Дополнительная информация о пользователе'
         verbose_name_plural = 'Дополнительная информация о пользователе'
 
-    def __str__(self):
+    def __str__(self) -> str | None:
         if self.user:
             return f'{self.id} | {self.user.first_name} | {self.user.last_name} |' f' {self.user.username}'

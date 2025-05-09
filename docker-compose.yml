@@ -1,22 +1,30 @@
-version: "3"
-
 services:
   api:
     build:
       context: .
+      dockerfile: Dockerfile
     command: >
-      bash -c "python manage.py makemigrations
-      && python manage.py migrate
-      && python manage.py runserver 0.0.0.0:8000"
+      bash -c "python manage.py migrate
+      && python manage.py collectstatic --noinput
+      && gunicorn backend_exchanger.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2"
     volumes:
       - .:/api
+      - static_volume:/api/staticfiles
+      - media_volume:/api/media
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
       - postgres
-
+      - redis
+      - rabbitmq
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   postgres:
     image: postgres:13-alpine
@@ -24,36 +32,100 @@ services:
       - pgdata:/var/lib/postgresql/data
     env_file:
       - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   rabbitmq:
-    container_name: rabbit-server2
-    hostname: rabbit-server2
-    image: rabbitmq:latest
+    image: rabbitmq:3-management-alpine
     ports:
       - "5672:5672"
-    restart: on-failure
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
 
   celery:
     build: .
-    command: celery -A finance worker -l info -Q send_notification,update_exchange_rates
+    command: celery -A finance worker -l info -Q send_notification,update_exchange_rates --concurrency=4
     volumes:
       - .:/api
     env_file:
       - .env
     depends_on:
       - rabbitmq
-    links:
+      - redis
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    command: celery -A finance beat -l info
+    volumes:
+      - .:/api
+    env_file:
+      - .env
+    depends_on:
       - rabbitmq
-    restart: on-failure
+      - redis
+    restart: unless-stopped
 
   redis:
-    restart: unless-stopped
     image: redis:7.0.5-alpine
-    container_name : redis
-    expose:
-      - 6379
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
 
 volumes:
   pgdata:
+  redis_data:
+  rabbitmq_data:
+  static_volume:
+  media_volume:
+  prometheus_data:
+  grafana_data:
 
 

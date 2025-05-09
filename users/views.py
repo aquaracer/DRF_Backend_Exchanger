@@ -6,6 +6,7 @@ from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.decorators import method_decorator
+from typing import Type, Any, Dict
 
 from .models import User
 from .serializers import UserSerializer, GetUserInfoSerializer, UpdateUserInfoSerializer
@@ -18,10 +19,9 @@ class UserSignupView(CreateAPIView):
     """Регистрация пользователя"""
 
     permission_classes = [AllowAny]
-    queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request) -> Response:
         signup_user(self, request)
         return Response(status=status.HTTP_201_CREATED)
 
@@ -48,16 +48,16 @@ class UserAreaViewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     """
     permission_classes = [IsAuthenticated, ]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> GetUserInfoSerializer | UpdateUserInfoSerializer:
         if self.action == 'retrieve':
             return GetUserInfoSerializer
         elif self.action == 'partial_update':
             return UpdateUserInfoSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> List[User]:
         return User.objects.filter(id=self.request.user.id)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request: Request) -> Response:
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)

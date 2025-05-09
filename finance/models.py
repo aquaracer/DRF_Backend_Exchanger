@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.core.validators import RegexValidator, MinLengthValidator, MinValueValidator
+from decimal import Decimal
 
 from users.models import AbstarctBaseModel
 
@@ -21,7 +22,7 @@ class Currency(AbstarctBaseModel):
         verbose_name = 'Валюта'
         verbose_name_plural = 'Валюты'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.id} | {self.full_name} '
 
 
@@ -44,7 +45,7 @@ class Account(AbstarctBaseModel):
         verbose_name = 'Счет'
         verbose_name_plural = 'Счета'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.id} | {self.number} | {self.balance} | {self.сurrency.symbol}'
 
 
@@ -88,8 +89,11 @@ class Transaction(AbstarctBaseModel):
         verbose_name = 'Транзакция'
         verbose_name_plural = 'Транзакции'
 
-    def __str__(self):
-        return f'{self.id}'
+    def __str__(self) -> str:
+        return f'{self.id} | sender account: {self.sender_account} | receiver account: {self.reciever_account} |' \
+               f' currency {self.сurrency} | descrition: {self.description}| amount: {self.amount} | transaction ' \
+               f'type:' \
+               f' {self.transaction_type}'
 
 
 class Application(AbstarctBaseModel):
@@ -98,7 +102,7 @@ class Application(AbstarctBaseModel):
     REFILL = 'refill'
     WITHDRAWAL = 'withdrawal'
 
-    TYPE = (
+    PAYMENT_TYPE = (
         (REFILL, 'Ввод'),
         (WITHDRAWAL, 'Вывод'),
     )
@@ -119,7 +123,6 @@ class Application(AbstarctBaseModel):
 
     account = models.ForeignKey(Account, verbose_name='Счет', on_delete=models.SET_NULL, null=True)
     currency = models.ForeignKey(Currency, verbose_name='Валюта', on_delete=models.SET_NULL, null=True)
-
     payment_id = models.UUIDField(verbose_name="Id платежа", unique=True, editable=False, blank=True, null=True)
     amount = models.DecimalField(
         verbose_name='Сумма',
@@ -128,14 +131,21 @@ class Application(AbstarctBaseModel):
         default=0,
         validators=[MinValueValidator(0)],
     )
-    type = models.CharField(verbose_name='Тип платежа', choices=TYPE, max_length=20)
+    payment_type = models.CharField(verbose_name='Тип платежа', choices=TYPE, max_length=20)
     status = models.CharField(verbose_name='Статус', choices=STATUS, max_length=20)
     error = models.CharField(verbose_name='Ошибка', max_length=3000, blank=True, null=True)
+
+    def __str__(self) -> str:
+        return f'{self.id} | account: {self.amount} | currency: {self.currency} | payment_id: {self.payment_id} | ' \
+               f'amount: {self.amount} | payment_type: {self.payment_type} | status: {self.status} | error: {self.error}'
 
 
 class ApplicationLog(AbstarctBaseModel):
     """История изменений заявки"""
 
     application = models.ForeignKey(Application, verbose_name='Заявка', on_delete=models.SET_NULL, null=True)
-
     status = models.CharField(verbose_name='Статус', choices=Application.STATUS, max_length=20)
+
+    def __str__(self) -> str:
+        return f'{self.id} | application_id: {self.application.id} | created_at: {self.created} | updated_at: ' \
+               f'{self.last_updated} | status: {self.status}'
