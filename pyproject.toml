@@ -1,0 +1,100 @@
+[tool.poetry]
+name = "drf-backend-exchanger"
+version = "0.1.0"
+description = ""
+authors = ["Boris Averin <89068157313@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+amqp = "5.1.1"
+asgiref = "3.8.1"
+async-timeout = "4.0.3"
+attrs = "23.2.0"
+pyjwt = "2.9.0"
+certifi = "^2025.7.14"
+cffi = "^1.17.1"
+chardet = "^5.2.0"
+celery = "^5.5.3"
+coreapi = "^2.3.3"
+coreschema = "^0.0.4"
+cryptography = "^45.0.5"
+defusedxml = "^0.7.1"
+django = "^5.2.4"
+django-cors-headers = "^4.7.0"
+django-celery-results = "^2.6.0"
+django-filter = "^25.1"
+django-templated-mail = "^1.1.1"
+djangorestframework = "^3.16.0"
+django-oauth-toolkit = "^3.0.1"
+django-rest-framework-social-oauth2 = "^1.2.0"
+djangorestframework-simplejwt = "^5.5.0"
+djoser = "^2.3.3"
+drf-yasg = "^1.21.10"
+idna = "^3.10"
+importlib-metadata = "^8.7.0"
+itypes = "^1.2.0"
+jinja2 = "^3.1.6"
+markupsafe = "^3.0.2"
+oauthlib = "^3.3.1"
+pillow = "^11.3.0"
+psycopg2-binary = "^2.9.10"
+pycparser = "^2.22"
+python3-openid = "^3.2.0"
+pytz = "^2025.2"
+redis = "^6.2.0"
+requests = "^2.32.4"
+requests-oauthlib = "^2.0.0"
+six = "^1.17.0"
+setuptools = "^80.9.0"
+social-auth-app-django = "^5.5.1"
+social-auth-core = "^4.7.0"
+sqlparse = "^0.5.3"
+uritemplate = "^4.2.0"
+urllib3 = "^2.5.0"
+zipp = "^3.23.0"
+ruff = "^0.12.4"
+yookassa = "^3.5.0"
+dotenv = "^0.9.9"
+drf-spectacular = "^0.28.0"
+django-debug-toolbar = "^5.2.0"
+django-celery-beat = "^2.8.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = ">=0.12.2,<0.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+fix = true
+
+exclude = [
+    ".git",
+    ".venv",
+    "migrations",
+    "__pycache__"
+]
+
+# выбор наборов правил
+select = [
+    "E", # pycodestyle errors
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+    "N", # pep8-naming
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "RUF", # Ruff-specific rules
+]
+
+line-length = 88
+
+ignore = [
+    "RUF001",
+    "RUF002",
+    "RUF012",
+    "N818"
+]

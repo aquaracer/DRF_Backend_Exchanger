@@ -1,0 +1,82 @@
+services:
+
+  django_gunicorn:
+    build: ./
+    command: >
+      bash -c "python manage.py makemigrations && python manage.py migrate
+      && config.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/api
+      - static:/static
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - static:/static
+    ports:
+      - "80:80"
+    depends_on:
+      - django_gunicorn
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: rabbit-server3
+    hostname: rabbit-server3
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+    restart: on-failure
+
+  celery:
+    build: .
+    command: celery -A finance worker -l info -Q send_notification,update_exchange_rates --concurrency=4
+    volumes:
+      - .:/api
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - redis
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    command: celery -A finance beat -l info
+    volumes:
+      - .:/api
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - redis
+    restart: unless-stopped
+
+  cache:
+    image: redis:7.2.4-alpine
+    volumes:
+      - redis_data:/data
+    container_name: exchanger_cache
+    restart: always
+    ports:
+      - '6379:6379'
+
+volumes:
+  static:
+  pgdata:
+  redis_data:
+
+
